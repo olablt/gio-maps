@@ -1,18 +1,19 @@
-package maps
+package tiles
 
 import (
 	"fmt"
-	"image"
 	_ "image/png"
 	"sync"
+
+	"gioui.org/op/paint"
 )
 
 type TileProvider interface {
-	GetTile(tile Tile) (image.Image, error)
+	GetTile(tile Tile) (*paint.ImageOp, error)
 }
 
 type TileManager struct {
-	cache    map[string]image.Image
+	cache    map[string]paint.ImageOp
 	mutex    sync.RWMutex
 	provider TileProvider
 	onLoad   func()
@@ -20,7 +21,7 @@ type TileManager struct {
 
 func NewTileManager(provider TileProvider) *TileManager {
 	return &TileManager{
-		cache:    make(map[string]image.Image),
+		cache:    make(map[string]paint.ImageOp),
 		provider: provider,
 	}
 }
@@ -34,14 +35,14 @@ func getTileKey(tile Tile) string {
 	return fmt.Sprintf("%d/%d/%d", tile.Zoom, tile.X, tile.Y)
 }
 
-func (tm *TileManager) GetTile(tile Tile) (image.Image, error) {
+func (tm *TileManager) GetTile(tile Tile) (*paint.ImageOp, error) {
 	key := getTileKey(tile)
 	// log.Println("GetTile", key)
 
 	tm.mutex.RLock()
 	if img, exists := tm.cache[key]; exists {
 		tm.mutex.RUnlock()
-		return img, nil
+		return &img, nil
 	}
 	tm.mutex.RUnlock()
 
@@ -51,7 +52,7 @@ func (tm *TileManager) GetTile(tile Tile) (image.Image, error) {
 	}
 
 	tm.mutex.Lock()
-	tm.cache[key] = img
+	tm.cache[key] = *img
 	tm.mutex.Unlock()
 
 	if tm.onLoad != nil {

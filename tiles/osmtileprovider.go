@@ -1,4 +1,4 @@
-package maps
+package tiles
 
 import (
 	"fmt"
@@ -6,6 +6,8 @@ import (
 	_ "image/png"
 	"log"
 	"net/http"
+
+	"gioui.org/op/paint"
 )
 
 type OSMTileProvider struct {
@@ -18,7 +20,7 @@ func NewOSMTileProvider() *OSMTileProvider {
 	}
 }
 
-func (p *OSMTileProvider) GetTile(tile Tile) (image.Image, error) {
+func (p *OSMTileProvider) GetTile(tile Tile) (*paint.ImageOp, error) {
 	url := p.GetTileURL(tile)
 	log.Printf("Requesting OSM tile: %s", url)
 
@@ -52,9 +54,10 @@ func (p *OSMTileProvider) GetTile(tile Tile) (image.Image, error) {
 		log.Printf("Error decoding tile image %v: %v", tile, err)
 		return nil, err
 	}
-	
+
 	log.Printf("Successfully loaded OSM tile: %v", tile)
-	return img, nil
+	imgOp := paint.NewImageOp(img)
+	return &imgOp, nil
 }
 
 // GetTileURL returns the URL for downloading the map tile

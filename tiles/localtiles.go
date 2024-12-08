@@ -1,4 +1,4 @@
-package maps
+package tiles
 
 import (
 	"fmt"
@@ -6,6 +6,7 @@ import (
 	"image/color"
 	"image/draw"
 
+	"gioui.org/op/paint"
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/basicfont"
 	"golang.org/x/image/math/fixed"
@@ -17,7 +18,7 @@ func NewLocalTileProvider() *LocalTileProvider {
 	return &LocalTileProvider{}
 }
 
-func (p *LocalTileProvider) GetTile(tile Tile) (image.Image, error) {
+func (p *LocalTileProvider) GetTile(tile Tile) (*paint.ImageOp, error) {
 	// Create a new 256x256 RGBA image (standard tile size)
 	img := image.NewRGBA(image.Rect(0, 0, 256, 256))
 
@@ -40,7 +41,8 @@ func (p *LocalTileProvider) GetTile(tile Tile) (image.Image, error) {
 		draw.Draw(img, rect, &image.Uniform{borderColor}, image.Point{}, draw.Src)
 	}
 
-	return img, nil
+	imgOp := paint.NewImageOp(img)
+	return &imgOp, nil
 }
 
 func drawText(img *image.RGBA, tile Tile) {
